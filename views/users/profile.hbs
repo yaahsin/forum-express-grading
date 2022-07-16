@@ -32,6 +32,20 @@
         <a class="btn btn-primary" href="/users/{{user.id}}/edit">
           Edit
         </a>
+        {{else}}
+        {{#if theUser.isFollowed}}
+        <form action="/following/{{theUser.id}}?_method=DELETE" method="POST" style="display: contents;">
+          <button type="submit" class="btn btn-danger">
+            取消追蹤
+          </button>
+        </form>
+        {{else}}
+        <form action="/following/{{theUser.id}}" method="POST" style="display: contents;">
+          <button type="submit" class="btn btn-primary">
+            追蹤
+          </button>
+        </form>
+        {{/if}}
         {{/ifCond}}
         <a class="btn btn-outline-secondary" href="javascript:history.back()">Back</a>
       </div>

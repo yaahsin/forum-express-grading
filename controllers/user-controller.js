@@ -62,8 +62,11 @@ const userController = {
 
         // always先反查
         if (!theUser) throw new Error("User didn't exist!")
+        theUser = theUser.toJSON()
+        theUser.isFollowed = req.user.Followings.some(following => following.id === theUser.id)
+        console.log(theUser)
         res.render('users/profile', {
-          user, theUser: theUser.toJSON(), commented: result
+          user, theUser, commented: result
         })
       })
       .catch(err => next(err))
