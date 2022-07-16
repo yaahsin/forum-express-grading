@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs')
 const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../models')
 const { imgurFileHandler } = require('../helpers/file-helpers')
 const { getUser } = require('../helpers/auth-helpers')
+// const { request } = require('express')
 const userController = {
   signUpPage: (req, res) => {
     res.render('signup')
@@ -44,14 +45,25 @@ const userController = {
     const user = getUser(req)
     // 前往的使用者頁面users/:id !== 現在登入的人
     return User.findByPk(req.params.id, {
-      include: [{ model: Comment, include: Restaurant }]
+      include: [{ model: Comment, include: Restaurant },
+        { model: Restaurant, as: 'FavoritedRestaurants' },
+        { model: User, as: 'Followers' },
+        { model: User, as: 'Followings' }]
     })
+
       .then(theUser => {
+        // 剔除重複的餐廳
+        const result = theUser.toJSON().Comments.reduce((commented, o) => {
+          if (!commented.some(res => res.restaurantId === o.restaurantId)) {
+            commented.push(o)
+          }
+          return commented
+        }, [])
+
         // always先反查
         if (!theUser) throw new Error("User didn't exist!")
-
         res.render('users/profile', {
-          user, theUser: theUser.toJSON()
+          user, theUser: theUser.toJSON(), commented: result
         })
       })
       .catch(err => next(err))
@@ -176,7 +188,7 @@ const userController = {
             // 整理格式
             ...user.toJSON(),
             // 計算追蹤者人數
-            followerCount: user.Followers.length,
+            followerCount: user.Followers,
             // 判斷目前登入使用者是否已追蹤該 user 物件
             isFollowed: req.user.Followings.some(f => f.id === user.id)
           }))
@@ -199,6 +211,8 @@ const userController = {
       .then(([user, followship]) => {
         if (!user) throw new Error("User didn't exist!")
         if (followship) throw new Error('You are already following this user!')
+        if (userId === req.user.id.toString()) throw new Error('You cannot follow yourself!')
+
         return Followship.create({
           followerId: req.user.id,
           followingId: userId
