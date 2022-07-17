@@ -59,6 +59,7 @@ const restaurantController = {
     })
       .then(restaurant => {
         restaurant = restaurant.toJSON()
+        // 1. error顯示: TypeError: Cannot read properties of undefined (reading 'length')
         const commentCounts = restaurant.Comments.length
         if (!restaurant) throw new Error("Restaurant didn't exist!")
         return res.render('dashboard', { restaurant, commentCounts })
