@@ -1,6 +1,6 @@
+const adminServices = require('../../services/admin-services')
 const { Restaurant, User, Category } = require('../../models')
 const { imgurFileHandler } = require('../../helpers/file-helpers')
-const adminServices = require('../../services/admin-services')
 
 const adminController = {
   getRestaurants: (req, res, next) => {
@@ -18,8 +18,11 @@ const adminController = {
   postRestaurant: (req, res, next) => {
     adminServices.postRestaurant(req, (err, data) => {
       if (err) return next(err)
+      // 只有page需要flash, 所以不用放到service
       req.flash('success_messages', 'restaurant was successfully created')
       res.redirect('/admin/restaurants', data)
+      req.session.createdData = data
+      return res.redirect('/admin/restaurants')
     })
   },
   // 瀏覽單一餐廳
@@ -75,7 +78,11 @@ const adminController = {
       .catch(err => next(err))
   },
   deleteRestaurant: (req, res, next) => {
-    adminServices.deleteRestaurant(req, (err, data) => err ? next(err) : res.redirect('/admin/restaurants', data))
+    adminServices.deleteRestaurant(req, (err, data) => {
+      if (err) return next(err)
+      req.session.deletedData = data
+      return res.redirect('/admin/restaurants')
+    })
   },
   getUsers: (req, res, next) => {
     return User.findAll({ raw: true })

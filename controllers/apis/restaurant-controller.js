@@ -4,4 +4,5 @@ const restaurantController = {
     restaurantServices.getRestaurants(req, (err, data) => err ? next(err) : res.json(data))
   }
 }
+
 module.exports = restaurantController
